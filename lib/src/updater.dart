@@ -11,10 +11,10 @@ import 'package:self_updater/src/github_service.dart';
 import 'package:self_updater/src/logs/logs.dart';
 import 'package:version/version.dart';
 
-enum ReleaseChannel {
-  dev,
-  beta,
+enum UpdateChannel {
   stable,
+  beta,
+  dev,
 }
 
 final _log = Logger('Updater');
@@ -23,17 +23,17 @@ class Updater {
   final List<Release> _recentReleases;
 
   final String currentVersion;
-  final ReleaseChannel releaseChannel;
+  final UpdateChannel updateChannel;
 
   const Updater(
     this._recentReleases, {
     required this.currentVersion,
-    required this.releaseChannel,
+    required this.updateChannel,
   });
 
   static Future<Updater> initialize({
     required String currentVersion,
-    required ReleaseChannel releaseChannel,
+    required UpdateChannel updateChannel,
     required String repoUrl,
   }) async {
     initializeLogger();
@@ -43,23 +43,23 @@ class Updater {
     return Updater(
       await github.getRecentReleases(),
       currentVersion: currentVersion,
-      releaseChannel: releaseChannel,
+      updateChannel: updateChannel,
     );
   }
 
   bool get updateAvailable {
-    switch (releaseChannel) {
-      case ReleaseChannel.dev:
+    switch (updateChannel) {
+      case UpdateChannel.dev:
         final latestDev = _latestDevVersion?.createdAt;
         if (latestDev == null) return false;
         final current = DateTime.tryParse(currentVersion) ?? DateTime(1965);
         return current.isBefore(latestDev);
-      case ReleaseChannel.beta:
+      case UpdateChannel.beta:
         final latestBeta = _latestBetaVersion?.tagName;
         if (latestBeta == null) return false;
         return Version.parse(currentVersion) <
             Version.parse(latestBeta.substring(1));
-      case ReleaseChannel.stable:
+      case UpdateChannel.stable:
         final latestStable = _latestStableVersion?.tagName;
         if (latestStable == null) return false;
         return Version.parse(currentVersion) <
@@ -70,7 +70,7 @@ class Updater {
   String? get updateVersion {
     String? updateVersion;
     if (_latestRelease?.tagName == 'latest' &&
-        releaseChannel == ReleaseChannel.dev) {
+        updateChannel == UpdateChannel.dev) {
       final creationDate = _latestRelease?.createdAt?.toLocal();
 
       updateVersion =
@@ -97,12 +97,12 @@ class Updater {
       );
 
   Release? get _latestRelease {
-    switch (releaseChannel) {
-      case ReleaseChannel.dev:
+    switch (updateChannel) {
+      case UpdateChannel.dev:
         return _latestDevVersion;
-      case ReleaseChannel.beta:
+      case UpdateChannel.beta:
         return _latestBetaVersion;
-      case ReleaseChannel.stable:
+      case UpdateChannel.stable:
         return _latestStableVersion;
     }
   }

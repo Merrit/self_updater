@@ -7,7 +7,7 @@ void main() {
       final Updater updater = await Updater.initialize(
         currentVersion:
             DateTime.now().subtract(const Duration(days: 1)).toString(),
-        releaseChannel: ReleaseChannel.dev,
+        updateChannel: UpdateChannel.dev,
         repoUrl: 'https://github.com/Merrit/adventure_list',
       );
 
