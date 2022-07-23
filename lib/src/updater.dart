@@ -155,7 +155,7 @@ class Updater {
     switch (Platform.operatingSystem) {
       case 'linux':
         executable = 'bash';
-        arguments = ['-c', 'sleep 5 && tar -xf $archivePath -C $appDir'];
+        arguments = ['-c', 'sleep 5 && tar -xf "$archivePath" -C "$appDir"'];
         break;
     }
 
