@@ -154,7 +154,7 @@ class Updater {
         break;
     }
 
-    await Process.start(
+    Process.start(
       executable,
       arguments,
       mode: ProcessStartMode.detached,
