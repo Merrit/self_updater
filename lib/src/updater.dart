@@ -107,10 +107,11 @@ class Updater {
     }
   }
 
-  Future<void> downloadUpdate() async {
+  /// If successful returns the path to the downloaded update file.
+  Future<String?> downloadUpdate() async {
     // ignore: no_leading_underscores_for_local_identifiers
     final Release? localLatestRelease = _latestRelease;
-    if (localLatestRelease == null) return;
+    if (localLatestRelease == null) return null;
 
     ReleaseAsset? releaseAsset;
 
@@ -125,9 +126,9 @@ class Updater {
       default:
     }
 
-    if (releaseAsset == null) return;
-    if (releaseAsset.browserDownloadUrl == null) return;
-    if (releaseAsset.name == null) return;
+    if (releaseAsset == null) return null;
+    if (releaseAsset.browserDownloadUrl == null) return null;
+    if (releaseAsset.name == null) return null;
 
     final tempDir = await getTemporaryDirectory();
     final assetFullDownloadPath = '${tempDir.path}/${releaseAsset.name}';
@@ -139,10 +140,14 @@ class Updater {
       assetFullDownloadPath,
     );
 
-    installUpdate(archivePath: assetFullDownloadPath);
+    return assetFullDownloadPath;
   }
 
   Future<void> installUpdate({required String archivePath}) async {
+    if (!await File(archivePath).exists()) {
+      throw Exception('No downloaded asset was found.');
+    }
+
     final String appDir = Directory.current.path;
 
     String executable = '';
