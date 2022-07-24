@@ -2,11 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
+final Logger updateLogger = Logger.detached('SelfUpdater');
+
 /// Print log messages.
 void initializeLogger() {
-  Logger.root.level = Level.ALL;
+  updateLogger.level = Level.ALL;
 
-  Logger.root.onRecord.listen((record) {
+  updateLogger.onRecord.listen((record) {
     final String time = DateFormat('h:mm:ss a').format(record.time);
 
     var msg = 'SelfUpdater: ${record.level.name}: $time: '
