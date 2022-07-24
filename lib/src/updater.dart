@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:github/src/common/model/repos_releases.dart';
+import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:self_updater/src/github_service.dart';
@@ -156,6 +157,29 @@ class Updater {
     return assetFullDownloadPath;
   }
 
+  /// Write installation logs to a file, as the calling application will end up
+  /// being closed during the install and this file will be a way to debug or
+  /// otherwise follow up on what happened during the update.
+  void _logToFile() {
+    final logFile = File('${Directory.current.path}/update_log.txt');
+    if (logFile.existsSync()) logFile.deleteSync();
+    logFile.createSync();
+
+    updateLogger.onRecord.listen((LogRecord record) {
+      final String time = DateFormat('h:mm:ss a').format(record.time);
+
+      var msg = 'SelfUpdater: ${record.level.name}: $time: '
+          '${record.loggerName}: ${record.message}';
+
+      if (record.error != null) msg += '\nError: ${record.error}';
+      logFile.writeAsStringSync(
+        msg,
+        mode: FileMode.append,
+        flush: true,
+      );
+    });
+  }
+
   Future<void> installUpdate({
     required String archivePath,
     required bool relaunchApp,
@@ -163,6 +187,11 @@ class Updater {
     if (!await File(archivePath).exists()) {
       throw Exception('No downloaded asset was found.');
     }
+
+    _logToFile();
+    updateLogger.info(
+      'Starting update. Local time: ${DateTime.now().toLocal().toString()}',
+    );
 
     final String appDir = Directory.current.path;
     updateLogger.info('Running app\'s directory: $appDir');
