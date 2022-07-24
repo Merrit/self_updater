@@ -69,10 +69,7 @@ class Updater {
     String? updateVersion;
     if (_latestRelease?.tagName == 'latest' &&
         updateChannel == UpdateChannel.dev) {
-      final creationDate = _latestRelease?.createdAt?.toLocal();
-
-      updateVersion =
-          '${creationDate?.year}-${creationDate?.month}-${creationDate?.day}';
+      updateVersion = _latestRelease?.createdAt?.toUtc().toString();
     } else {
       updateVersion = _latestRelease?.tagName;
     }
