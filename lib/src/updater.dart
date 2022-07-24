@@ -111,7 +111,10 @@ class Updater {
   Future<String?> downloadUpdate() async {
     // ignore: no_leading_underscores_for_local_identifiers
     final Release? localLatestRelease = _latestRelease;
-    if (localLatestRelease == null) return null;
+    if (localLatestRelease == null) {
+      _log.severe('No update release was found.');
+      return null;
+    }
 
     ReleaseAsset? releaseAsset;
 
@@ -126,11 +129,17 @@ class Updater {
       default:
     }
 
-    if (releaseAsset == null) return null;
-    if (releaseAsset.browserDownloadUrl == null) return null;
-    if (releaseAsset.name == null) return null;
+    if (releaseAsset == null ||
+        releaseAsset.browserDownloadUrl == null ||
+        releaseAsset.name == null) {
+      _log.severe(
+        'ReleaseAsset from GitHub problem: ${releaseAsset?.toJson()}',
+      );
+      return null;
+    }
 
     final tempDir = await getTemporaryDirectory();
+    _log.info('tempDir: ${tempDir.path}');
     final assetFullDownloadPath = '${tempDir.path}/${releaseAsset.name}';
 
     _log.info('Downloading asset');
@@ -138,7 +147,16 @@ class Updater {
     await dio.download(
       releaseAsset.browserDownloadUrl!,
       assetFullDownloadPath,
+      deleteOnError: true,
+      onReceiveProgress: (int count, int total) {
+        String bytesLoaded = '$count';
+        String totalSize = (total == -1) ? '???' : '$total';
+        _log.info('Downloading release asset: $bytesLoaded/$totalSize');
+      },
     );
+
+    _log.info('Finished downloading release asset.');
+    _log.info('Asset is located at: $assetFullDownloadPath');
 
     return assetFullDownloadPath;
   }
@@ -149,6 +167,7 @@ class Updater {
     }
 
     final String appDir = Directory.current.path;
+    _log.info('Running app\'s directory: $appDir');
 
     String executable = '';
     List<String> arguments = [];
@@ -159,11 +178,19 @@ class Updater {
         break;
     }
 
-    Process.start(
+    _log.info('''
+Running command to extract update.
+Executable: $executable
+Arguments: $arguments''');
+
+    final process = await Process.start(
       executable,
       arguments,
       mode: ProcessStartMode.detached,
     );
+
+    _log.info('Extraction started as detached process with PID ${process.pid}');
+    _log.info('Exiting to allow update to continue.');
 
     exit(0);
   }
