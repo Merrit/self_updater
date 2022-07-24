@@ -159,7 +159,10 @@ class Updater {
     return assetFullDownloadPath;
   }
 
-  Future<void> installUpdate({required String archivePath}) async {
+  Future<void> installUpdate({
+    required String archivePath,
+    required bool relaunchApp,
+  }) async {
     if (!await File(archivePath).exists()) {
       throw Exception('No downloaded asset was found.');
     }
@@ -174,6 +177,11 @@ class Updater {
         executable = 'bash';
         arguments = ['-c', 'sleep 5 && tar -xf "$archivePath" -C "$appDir"'];
         break;
+    }
+
+    if (relaunchApp) {
+      // This may need to be different for Windows' PowerShell syntax.
+      arguments[1] += ' && "${Platform.resolvedExecutable}" &';
     }
 
     updateLogger.info('''
