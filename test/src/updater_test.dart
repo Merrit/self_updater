@@ -3,15 +3,14 @@ import 'package:self_updater/src/updater.dart';
 
 void main() {
   group('Updater:', () {
-    test('?!?!', () async {
+    test('recognizes available pre-release update', () async {
       final Updater updater = await Updater.initialize(
-        currentVersion:
-            DateTime.now().subtract(const Duration(days: 1)).toString(),
+        currentVersion: '2022-07-23 16:36:59.425642',
         updateChannel: UpdateChannel.dev,
         repoUrl: 'https://github.com/Merrit/adventure_list',
       );
 
-      await updater.downloadUpdate();
+      expect(updater.updateAvailable, true);
     });
   });
 }
