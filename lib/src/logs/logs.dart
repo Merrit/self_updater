@@ -12,7 +12,7 @@ void initializeLogger() {
     final String time = DateFormat('h:mm:ss a').format(record.time);
 
     var msg = 'SelfUpdater: ${record.level.name}: $time: '
-        '${record.loggerName}: ${record.message}';
+        '${record.loggerName}: ${record.message}\n';
 
     if (record.error != null) msg += '\nError: ${record.error}';
 
