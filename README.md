@@ -13,26 +13,78 @@ and the Flutter guide for
 
 A self updater for Flutter apps
 
+## Platform Support
+
+| Linux | macOS | Windows |
+| :---: | :---: | :-----: |
+|   ✔️   |   ❌   |    ❌    |
+
+Windows support coming *soon™*.
+
 ## Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+Automatically download the lastest release from GitHub releases for the running
+platform, close the running app, update, relaunch app.
 
 ## Getting started
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+Add to `pubspec.yaml`
+
+```yml
+  self_updater:
+    git:
+      url: https://github.com/Merrit/self_updater.git
+      ref: <commit hash>
+```
 
 ## Usage
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder. 
+Basic example, this implementation would be better off in something like a
+function elsewhere.
 
 ```dart
-const like = 'sample';
+void main() {
+    WidgetsFlutterBinding.ensureInitialized();
+
+    // runApp()
+
+    updateApp();
+}
+
+Future<void> updateApp() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+
+    Updater updater = await Updater.initialize(
+      currentVersion: packageInfo.version,
+      updateChannel: UpdateChannel.stable,
+      repoUrl: 'https://github.com/<user>/<repo>',
+    );
+
+    if (!updater.updateAvailable) return;
+
+    String? updateArchivePath = await updater.downloadUpdate();
+    if (updateArchivePath == null) {
+      print('Downloading update was NOT successful.');
+    } else {
+      await updater.installUpdate(
+        archivePath: updateArchivePath,
+        relaunchApp: true,
+      );
+    }
+}
 ```
 
 ## Additional information
 
-TODO: Tell users more about the package: where to find more information, how to 
-contribute to the package, how to file issues, what response they can expect 
-from the package authors, and more.
+Updater is only tested for Development releases so far.
+
+The updater currently only supports updates from GitHub releases, that adhere to
+Semver versioning as well as releases tagged `latest` for updating to
+development releases. (Development releases currently require a file called
+`BUILD` in the app directory with the UTC timestamp of when it was built.)
+
+An in-development app that uses the updater can be seen here:
+https://github.com/Merrit/adventure_list
+
+This package has been created primarily for the author's needs, however if it is
+found to be useful contributions, issues, ideas, etc are very welcome! 💙
