@@ -122,7 +122,14 @@ class Updater {
                 element.name?.contains(RegExp(r'-Linux-Portable.tar.gz')) ??
                 false);
         break;
-      default:
+      case 'windows':
+        releaseAsset = localLatestRelease //
+            .assets
+            ?.firstWhereOrNull(
+          (element) =>
+              element.name?.contains(RegExp(r'-Windows-Portable.zip')) ?? false,
+        );
+        break;
     }
 
     if (releaseAsset == null ||
@@ -136,7 +143,8 @@ class Updater {
 
     final tempDir = await getTemporaryDirectory();
     updateLogger.info('tempDir: ${tempDir.path}');
-    final assetFullDownloadPath = '${tempDir.path}/${releaseAsset.name}';
+    final assetFullDownloadPath =
+        '${tempDir.path}${Platform.pathSeparator}${releaseAsset.name}';
 
     updateLogger.info('Downloading asset');
     final dio = Dio();
@@ -161,7 +169,8 @@ class Updater {
   /// being closed during the install and this file will be a way to debug or
   /// otherwise follow up on what happened during the update.
   void _logToFile() {
-    final logFile = File('${Directory.current.path}/update_log.txt');
+    final logFile = File(
+        '${Directory.current.path}${Platform.pathSeparator}update_log.txt');
     if (logFile.existsSync()) logFile.deleteSync();
     logFile.createSync();
 
@@ -203,11 +212,24 @@ class Updater {
         executable = 'bash';
         arguments = ['-c', 'sleep 5 && tar -xf "$archivePath" -C "$appDir"'];
         break;
+      case 'windows':
+        executable = 'powershell';
+        arguments = [
+          'Start-Sleep -Seconds 5; Expand-Archive -LiteralPath "$archivePath" -DestinationPath "$appDir"'
+        ];
+        break;
     }
 
     if (relaunchApp) {
-      // This may need to be different for Windows' PowerShell syntax.
-      arguments[1] += ' && "${Platform.resolvedExecutable}" &';
+      switch (Platform.operatingSystem) {
+        case 'linux':
+          arguments[1] += ' && "${Platform.resolvedExecutable}" &';
+          break;
+        case 'windows':
+          arguments[1] +=
+              '; Start-Process -FilePath "${Platform.resolvedExecutable}" &';
+          break;
+      }
     }
 
     updateLogger.info('''
