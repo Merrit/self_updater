@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:github/src/common/model/repos_releases.dart';
+import 'package:helpers/helpers.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
@@ -202,7 +203,7 @@ class Updater {
       'Starting update. Local time: ${DateTime.now().toLocal().toString()}',
     );
 
-    final String appDir = Directory.current.path;
+    final String appDir = applicationDirectory.path;
     updateLogger.info('Running app\'s directory: $appDir');
 
     String executable = '';
