@@ -21,7 +21,7 @@ Future<void> initializeLogger(String name) async {
     filter: ProductionFilter(),
     printer: PrettyPrinter(
       colors: stdout.supportsAnsiEscapes,
-      lineLength: stdout.terminalColumns,
+      lineLength: (stdout.hasTerminal) ? stdout.terminalColumns : 120,
     ),
     output: MultiOutput([
       ConsoleOutput(),
