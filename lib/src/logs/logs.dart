@@ -11,7 +11,7 @@ late final Logger logger;
 /// Print log messages.
 Future<void> initializeLogger(String name) async {
   final tempDir = await getTemporaryDirectory();
-  final timestamp = DateTime.now().toIso8601String();
+  final timestamp = DateTime.now().toIso8601String().replaceAll(':', '');
   final logFile = File(
     '${tempDir.path}${Platform.pathSeparator}${name}_update_log_$timestamp.txt',
   );
