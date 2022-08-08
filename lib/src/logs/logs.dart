@@ -12,7 +12,7 @@ late final Logger logger;
 Future<void> initializeLogger(String name) async {
   final tempDir = await getTemporaryDirectory();
   final logFile = File(
-    '${tempDir.path}${Platform.pathSeparator}{$name}_update_log.txt',
+    '${tempDir.path}${Platform.pathSeparator}${name}_update_log.txt',
   );
   if (await logFile.exists()) await logFile.delete();
   await logFile.create();
