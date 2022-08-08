@@ -170,8 +170,10 @@ class Updater {
   /// being closed during the install and this file will be a way to debug or
   /// otherwise follow up on what happened during the update.
   void _logToFile() {
+    // TODO: This log file should be elsewhere like /tmp or ~/.local/...
     final logFile = File(
-        '${Directory.current.path}${Platform.pathSeparator}update_log.txt');
+      '${applicationDirectory.path}${Platform.pathSeparator}update_log.txt',
+    );
     if (logFile.existsSync()) logFile.deleteSync();
     logFile.createSync();
 
