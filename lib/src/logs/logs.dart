@@ -1,21 +1,31 @@
-import 'package:flutter/foundation.dart';
-import 'package:intl/intl.dart';
-import 'package:logging/logging.dart';
+import 'dart:io';
 
-final Logger updateLogger = Logger.detached('SelfUpdater');
+import 'package:logger/logger.dart';
+// FileOutput import needed due to bug in package.
+// ignore: implementation_imports
+import 'package:logger/src/outputs/file_output.dart';
+import 'package:path_provider/path_provider.dart';
+
+late final Logger logger;
 
 /// Print log messages.
-void initializeLogger() {
-  updateLogger.level = Level.ALL;
+Future<void> initializeLogger(String name) async {
+  final tempDir = await getTemporaryDirectory();
+  final logFile = File(
+    '${tempDir.path}${Platform.pathSeparator}{$name}_update_log.txt',
+  );
+  if (await logFile.exists()) await logFile.delete();
+  await logFile.create();
 
-  updateLogger.onRecord.listen((record) {
-    final String time = DateFormat('h:mm:ss a').format(record.time);
-
-    var msg = 'SelfUpdater: ${record.level.name}: $time: '
-        '${record.loggerName}: ${record.message}\n';
-
-    if (record.error != null) msg += '\nError: ${record.error}';
-
-    debugPrint(msg);
-  });
+  logger = Logger(
+    filter: ProductionFilter(),
+    printer: PrettyPrinter(
+      colors: stdout.supportsAnsiEscapes,
+      lineLength: stdout.terminalColumns,
+    ),
+    output: MultiOutput([
+      ConsoleOutput(),
+      FileOutput(file: logFile),
+    ]),
+  );
 }

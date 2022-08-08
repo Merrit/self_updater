@@ -6,8 +6,6 @@ import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:github/src/common/model/repos_releases.dart';
 import 'package:helpers/helpers.dart';
-import 'package:intl/intl.dart';
-import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:self_updater/src/github_service.dart';
 import 'package:self_updater/src/logs/logs.dart';
@@ -21,12 +19,14 @@ enum UpdateChannel {
 
 class Updater {
   final List<Release> _recentReleases;
+  final Directory _tempDir;
 
   final String currentVersion;
   final UpdateChannel updateChannel;
 
   const Updater(
-    this._recentReleases, {
+    this._recentReleases,
+    this._tempDir, {
     required this.currentVersion,
     required this.updateChannel,
   });
@@ -36,12 +36,13 @@ class Updater {
     required UpdateChannel updateChannel,
     required String repoUrl,
   }) async {
-    initializeLogger();
-
     final github = await GithubService.initialize(repoUrl);
+
+    await initializeLogger(github.repository.name);
 
     return Updater(
       await github.getRecentReleases(),
+      await getTemporaryDirectory(),
       currentVersion: currentVersion,
       updateChannel: updateChannel,
     );
@@ -109,7 +110,7 @@ class Updater {
     // ignore: no_leading_underscores_for_local_identifiers
     final Release? localLatestRelease = _latestRelease;
     if (localLatestRelease == null) {
-      updateLogger.severe('No update release was found.');
+      logger.e('No update release was found.');
       return null;
     }
 
@@ -136,18 +137,17 @@ class Updater {
     if (releaseAsset == null ||
         releaseAsset.browserDownloadUrl == null ||
         releaseAsset.name == null) {
-      updateLogger.severe(
+      logger.e(
         'ReleaseAsset from GitHub problem: ${releaseAsset?.toJson()}',
       );
       return null;
     }
 
-    final tempDir = await getTemporaryDirectory();
-    updateLogger.info('tempDir: ${tempDir.path}');
+    logger.i('tempDir: ${_tempDir.path}');
     final assetFullDownloadPath =
-        '${tempDir.path}${Platform.pathSeparator}${releaseAsset.name}';
+        '${_tempDir.path}${Platform.pathSeparator}${releaseAsset.name}';
 
-    updateLogger.info('Downloading asset');
+    logger.i('Downloading asset');
     final dio = Dio();
     await dio.download(
       releaseAsset.browserDownloadUrl!,
@@ -156,42 +156,14 @@ class Updater {
       onReceiveProgress: (int count, int total) {
         String bytesLoaded = '$count';
         String totalSize = (total == -1) ? '???' : '$total';
-        updateLogger.info('Downloading release asset: $bytesLoaded/$totalSize');
+        logger.i('Downloading release asset: $bytesLoaded/$totalSize');
       },
     );
 
-    updateLogger.info('Finished downloading release asset.');
-    updateLogger.info('Asset is located at: $assetFullDownloadPath');
+    logger.i('Finished downloading release asset.');
+    logger.i('Asset is located at: $assetFullDownloadPath');
 
     return assetFullDownloadPath;
-  }
-
-  /// Write installation logs to a file, as the calling application will end up
-  /// being closed during the install and this file will be a way to debug or
-  /// otherwise follow up on what happened during the update.
-  void _logToFile() {
-    // TODO: This log file should be elsewhere like /tmp or ~/.local/...
-    final logFile = File(
-      '${applicationDirectory.path}${Platform.pathSeparator}update_log.txt',
-    );
-    if (logFile.existsSync()) logFile.deleteSync();
-    logFile.createSync();
-
-    updateLogger.onRecord.listen((LogRecord record) {
-      final String time = DateFormat('h:mm:ss a').format(record.time);
-
-      var msg = 'SelfUpdater: ${record.level.name}: $time: '
-          '${record.loggerName}: ${record.message}';
-
-      if (record.error != null) msg += '\nError: ${record.error}';
-      logFile.writeAsStringSync(
-        '\n'
-        '$msg'
-        '\n',
-        mode: FileMode.append,
-        flush: true,
-      );
-    });
   }
 
   Future<void> installUpdate({
@@ -202,13 +174,12 @@ class Updater {
       throw Exception('No downloaded asset was found.');
     }
 
-    _logToFile();
-    updateLogger.info(
+    logger.i(
       'Starting update. Local time: ${DateTime.now().toLocal().toString()}',
     );
 
     final String appDir = applicationDirectory.path;
-    updateLogger.info('Running app\'s directory: $appDir');
+    logger.i('Running app\'s directory: $appDir');
 
     String executable = '';
     List<String> arguments = [];
@@ -237,7 +208,7 @@ class Updater {
       }
     }
 
-    updateLogger.info('''
+    logger.i('''
 Running command to extract update.
 Executable: $executable
 Arguments: $arguments''');
@@ -248,10 +219,10 @@ Arguments: $arguments''');
       mode: ProcessStartMode.detached,
     );
 
-    updateLogger.info(
+    logger.i(
       'Extraction started as detached process with PID ${process.pid}',
     );
-    updateLogger.info('Exiting to allow update to continue.');
+    logger.i('Exiting to allow update to continue.');
 
     exit(0);
   }
