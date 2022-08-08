@@ -17,9 +17,8 @@ A self updater for Flutter apps
 
 | Linux | macOS | Windows |
 | :---: | :---: | :-----: |
-|   ✔️   |   ❌   |    ❌    |
+|   ✔️   |   ❌   |    ✔️    |
 
-Windows support coming *soon™*.
 
 ## Features
 
