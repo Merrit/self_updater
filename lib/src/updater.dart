@@ -185,7 +185,9 @@ class Updater {
 
       if (record.error != null) msg += '\nError: ${record.error}';
       logFile.writeAsStringSync(
-        msg,
+        '\n'
+        '$msg'
+        '\n',
         mode: FileMode.append,
         flush: true,
       );
