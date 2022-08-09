@@ -223,6 +223,10 @@ Arguments: $arguments''');
       'Extraction started as detached process with PID ${process.pid}',
     );
     logger.i('Exiting to allow update to continue.');
+    logger.close();
+
+    /// Wait for the logger to flush to disk, since `close()` isn't async.
+    await Future.delayed(const Duration(seconds: 1));
 
     exit(0);
   }
