@@ -191,7 +191,7 @@ class Updater {
       case 'windows':
         executable = 'powershell';
         arguments = [
-          'Start-Sleep -Seconds 5; Expand-Archive -LiteralPath "$archivePath" -DestinationPath "$appDir"'
+          'Start-Sleep -Seconds 5; Expand-Archive -Force -LiteralPath "$archivePath" -DestinationPath "$appDir"'
         ];
         break;
     }
