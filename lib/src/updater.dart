@@ -211,22 +211,16 @@ class Updater {
     logger.i('''
 Running command to extract update.
 Executable: $executable
-Arguments: $arguments''');
+Arguments: $arguments
 
-    final process = await Process.start(
+Exiting to allow update to continue.''');
+    logger.close();
+
+    await Process.start(
       executable,
       arguments,
       mode: ProcessStartMode.detached,
     );
-
-    logger.i(
-      'Extraction started as detached process with PID ${process.pid}',
-    );
-    logger.i('Exiting to allow update to continue.');
-    logger.close();
-
-    /// Wait for the logger to flush to disk, since `close()` isn't async.
-    await Future.delayed(const Duration(seconds: 1));
 
     exit(0);
   }
