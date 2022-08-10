@@ -190,8 +190,9 @@ class Updater {
         break;
       case 'windows':
         executable = 'powershell';
+        // On Windows use `Stop-Process` to ensure the app has closed.
         arguments = [
-          'Start-Sleep -Seconds 5; Expand-Archive -Force -LiteralPath "$archivePath" -DestinationPath "$appDir"'
+          'Stop-Process -Id $pid -Force; Start-Sleep -Seconds 5; Expand-Archive -Force -LiteralPath "$archivePath" -DestinationPath "$appDir"'
         ];
         break;
     }
