@@ -17,7 +17,6 @@ dependencies:
   helpers:
     git:
       url: https://github.com/Merrit/helpers.git
-      ref: c95b618b1e22c70d1375d1eb0a00a1dbd529bd18
   intl: ^0.17.0
   logger: ^1.1.0
   path_provider: ^2.0.11
