@@ -202,7 +202,7 @@ class Updater {
           arguments[1] += ' && "${Platform.resolvedExecutable}" &';
           break;
         case 'windows':
-          arguments[1] +=
+          arguments[0] +=
               '; Start-Process -FilePath "${Platform.resolvedExecutable}" &';
           break;
       }
